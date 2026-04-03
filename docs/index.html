@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorting Photos - Скачать</title>
+    <title>Sorting Photos - Dowload</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -90,14 +90,14 @@
             <div class="platform">
                 <div class="platform-icon">🪟</div>
                 <h2>Windows</h2>
-                <p id="windows-desc">Загрузка...</p>
+                <p id="windows-desc">Downloading...</p>
                 <a id="windowsLink" class="download-link" href="#">Download</a>
             </div>
             
             <div class="platform">
                 <div class="platform-icon">🐧</div>
                 <h2>Linux</h2>
-                <p id="linux-desc">Загрузка...</p>
+                <p id="linux-desc">Downloading...</p>
                 <a id="linuxLink" class="download-link" href="#">Download</a>
             </div>
         </div>
@@ -121,8 +121,8 @@
                 const windowsUrl = `https://github.com/${owner}/${repo}/tree/main/Windows/${latestWindowsVersion}`;
                 
                 document.getElementById('windowsLink').href = windowsUrl;
-                document.getElementById('windowsLink').textContent = `Скачать ${latestWindowsVersion}`;
-                document.getElementById('windows-desc').textContent = `Версия ${latestWindowsVersion}`;
+                document.getElementById('windowsLink').textContent = `Dowload ${latestWindowsVersion}`;
+                document.getElementById('windows-desc').textContent = `Version ${latestWindowsVersion}`;
             }
             
             // Находим последнюю версию для Linux
@@ -131,8 +131,8 @@
                 const linuxUrl = `https://github.com/${owner}/${repo}/tree/main/Linux/${latestLinuxVersion}`;
                 
                 document.getElementById('linuxLink').href = linuxUrl;
-                document.getElementById('linuxLink').textContent = `Скачать ${latestLinuxVersion}`;
-                document.getElementById('linux-desc').textContent = `Версия ${latestLinuxVersion}`;
+                document.getElementById('linuxLink').textContent = `Dowload ${latestLinuxVersion}`;
+                document.getElementById('linux-desc').textContent = `Version ${latestLinuxVersion}`;
             }
             
             // Обновляем основную версию
