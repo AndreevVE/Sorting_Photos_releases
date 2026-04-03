@@ -1,14 +1,150 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Sorting Photos Releases</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Photos - Скачать</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container { 
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 { 
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .version {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .platforms {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .platform {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .platform:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+        }
+        .platform h2 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        .platform-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .download-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+            margin-top: 10px;
+        }
+        .download-link:hover {
+            transform: translateY(-2px);
+        }
+        .info {
+            text-align: center;
+            margin-top: 30px;
+            color: #999;
+            font-size: 12px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Sorting Photos Releases</h1>
+    <div class="container">
+        <h1>Sorting Photos</h1>
+        <div class="version" id="version">Downloading the latest version...</div>
+        
+        <div class="platforms">
+            <div class="platform">
+                <div class="platform-icon">🪟</div>
+                <h2>Windows</h2>
+                <p id="windows-desc">Загрузка...</p>
+                <a id="windowsLink" class="download-link" href="#">Download</a>
+            </div>
+            
+            <div class="platform">
+                <div class="platform-icon">🐧</div>
+                <h2>Linux</h2>
+                <p id="linux-desc">Загрузка...</p>
+                <a id="linuxLink" class="download-link" href="#">Download</a>
+            </div>
+        </div>
+        
+        <div class="info" id="info"></div>
+    </div>
 
-    <h2>Windows</h2>
-    <p>Installation instructions for Windows.</p>
-
-    <h2>Linux</h2>
-    <p>Installation instructions for Linux.</p>
+    <script>
+        const owner = 'AndreevVE';
+        const repo = 'Sorting_Photos_releases';
+        
+        // Получаем содержимое папок Windows и Linux
+        Promise.all([
+            fetch(`https://api.github.com/repos/${owner}/${repo}/contents/Windows`).then(r => r.json()),
+            fetch(`https://api.github.com/repos/${owner}/${repo}/contents/Linux`).then(r => r.json())
+        ])
+        .then(([windowsData, linuxData]) => {
+            // Находим последнюю версию для Windows
+            if (windowsData.length > 0) {
+                const latestWindowsVersion = windowsData.sort().reverse()[0].name;
+                const windowsUrl = `https://github.com/${owner}/${repo}/tree/main/Windows/${latestWindowsVersion}`;
+                
+                document.getElementById('windowsLink').href = windowsUrl;
+                document.getElementById('windowsLink').textContent = `Скачать ${latestWindowsVersion}`;
+                document.getElementById('windows-desc').textContent = `Версия ${latestWindowsVersion}`;
+            }
+            
+            // Находим последнюю версию для Linux
+            if (linuxData.length > 0) {
+                const latestLinuxVersion = linuxData.sort().reverse()[0].name;
+                const linuxUrl = `https://github.com/${owner}/${repo}/tree/main/Linux/${latestLinuxVersion}`;
+                
+                document.getElementById('linuxLink').href = linuxUrl;
+                document.getElementById('linuxLink').textContent = `Скачать ${latestLinuxVersion}`;
+                document.getElementById('linux-desc').textContent = `Версия ${latestLinuxVersion}`;
+            }
+            
+            // Обновляем основную версию
+            const allVersions = [...windowsData, ...linuxData].map(v => v.name).sort().reverse();
+            if (allVersions.length > 0) {
+                document.getElementById('version').textContent = `Latest version: ${allVersions[0]}`;
+            }
+        })
+        .catch(error => {
+            document.getElementById('version').textContent = 'Loading error';
+            console.error(error);
+        });
+    </script>
 </body>
 </html>
