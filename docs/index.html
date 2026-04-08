@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Photos - Downloads</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .version {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .platforms {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .platform {
+            flex: 1;
+            min-width: 250px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .platform:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .platform-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .platform h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .platform p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .download-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: opacity 0.3s ease;
+        }
+
+        .download-link:hover {
+            opacity: 0.9;
+        }
+
+        .info {
+            text-align: center;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            color: #1976d2;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .platforms {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Sorting Photos</h1>
+        <div class="version" id="version">Downloading the latest version...</div>
+        
+        <div class="platforms">
+            <div class="platform">
+                <div class="platform-icon">🪟</div>
+                <h2>Windows</h2>
+                <p id="windows-desc">Searching for latest version...</p>
+                <a id="windowsLink" class="download-link" href="#" download>Download .exe</a>
+            </div>
+            
+            <div class="platform">
+                <div class="platform-icon">🐧</div>
+                <h2>Linux</h2>
+                <p id="linux-desc">Searching for latest version...</p>
+                <a id="linuxLink" class="download-link" href="#" download>Download .deb</a>
+            </div>
+        </div>
+        
+        <div class="info" id="info"></div>
+    </div>
+
+    <script>
+        const owner = 'AndreevVE';
+        const repo = 'Sorting_Photos_releases';
+        
+        // Функция для поиска .exe или .deb файла в папке версии
+        async function getDirectDownloadUrl(path, fileExtension) {
+            try {
+                // Получаем содержимое папки с версией
+                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`);
+                const files = await response.json();
+                
+                // Ищем файл с нужным расширением
+                const targetFile = files.find(file => 
+                    file.name.toLowerCase().endsWith(fileExtension)
+                );
+                
+                if (targetFile) {
+                    return targetFile.download_url;
+                }
+                return null;
+            } catch (error) {
+                console.error(`Error fetching ${path}:`, error);
+                return null;
+            }
+        }
+        
+        // Получаем содержимое папок Windows и Linux
+        Promise.all([
+            fetch(`https://api.github.com/repos/${owner}/${repo}/contents/Windows`).then(r => r.json()),
+            fetch(`https://api.github.com/repos/${owner}/${repo}/contents/Linux`).then(r => r.json())
+        ])
+        .then(async ([windowsData, linuxData]) => {
+            // Обработка Windows
+            if (windowsData && windowsData.length > 0) {
+                // Сортируем папки по имени (версии) и берем последнюю
+                const windowsVersions = windowsData.sort((a, b) => b.name.localeCompare(a.name));
+                const latestWindowsVersion = windowsVersions[0];
+                
+                if (latestWindowsVersion) {
+                    // Ищем .exe файл в папке последней версии
+                    const exeUrl = await getDirectDownloadUrl(`Windows/${latestWindowsVersion.name}`, '.exe');
+                    
+                    if (exeUrl) {
+                        const windowsLink = document.getElementById('windowsLink');
+                        windowsLink.href = exeUrl;
+                        windowsLink.setAttribute('download', '');
+                        document.getElementById('windows-desc').innerHTML = `✅ Version ${latestWindowsVersion.name}<br><span style="font-size:0.85em;">Click to download .exe</span>`;
+                    } else {
+                        document.getElementById('windows-desc').textContent = `⚠️ Version ${latestWindowsVersion.name} found, but no .exe file`;
+                        document.getElementById('windowsLink').style.opacity = '0.5';
+                        document.getElementById('windowsLink').style.pointerEvents = 'none';
+                    }
+                }
+            } else {
+                document.getElementById('windows-desc').textContent = '❌ No Windows versions found';
+            }
+            
+            // Обработка Linux
+            if (linuxData && linuxData.length > 0) {
+                // Сортируем папки по имени (версии) и берем последнюю
+                const linuxVersions = linuxData.sort((a, b) => b.name.localeCompare(a.name));
+                const latestLinuxVersion = linuxVersions[0];
+                
+                if (latestLinuxVersion) {
+                    // Ищем .deb файл в папке последней версии
+                    const debUrl = await getDirectDownloadUrl(`Linux/${latestLinuxVersion.name}`, '.deb');
+                    
+                    if (debUrl) {
+                        const linuxLink = document.getElementById('linuxLink');
+                        linuxLink.href = debUrl;
+                        linuxLink.setAttribute('download', '');
+                        document.getElementById('linux-desc').innerHTML = `✅ Version ${latestLinuxVersion.name}<br><span style="font-size:0.85em;">Click to download .deb</span>`;
+                    } else {
+                        document.getElementById('linux-desc').textContent = `⚠️ Version ${latestLinuxVersion.name} found, but no .deb file`;
+                        document.getElementById('linuxLink').style.opacity = '0.5';
+                        document.getElementById('linuxLink').style.pointerEvents = 'none';
+                    }
+                }
+            } else {
+                document.getElementById('linux-desc').textContent = '❌ No Linux versions found';
+            }
+            
+            // Обновляем основную версию
+            const allVersions = [...(windowsData || []), ...(linuxData || []]).map(v => v.name).sort().reverse();
+            if (allVersions.length > 0) {
+                document.getElementById('version').innerHTML = `✨ Latest version: ${allVersions[0]} ✨`;
+                document.getElementById('info').innerHTML = '💡 Click the button above to start downloading immediately';
+            } else {
+                document.getElementById('version').textContent = 'No releases found';
+            }
+        })
+        .catch(error => {
+            document.getElementById('version').textContent = '❌ Failed to load releases';
+            document.getElementById('info').innerHTML = 'Please check your internet connection or try again later.';
+            console.error('Error:', error);
+        });
+    </script>
+</body>
+</html>
