@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Photos - Downloads</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .version {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .platforms {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .platform {
+            flex: 1;
+            min-width: 250px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .platform:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .platform-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .platform h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .platform p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .download-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+        }
+
+        .download-link:hover {
+            opacity: 0.9;
+        }
+
+        .download-link.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .info {
+            text-align: center;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            color: #1976d2;
+            font-size: 0.9em;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .platforms {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Sorting Photos</h1>
+        <div class="version" id="version">Loading...</div>
+        
+        <div class="platforms">
+            <div class="platform">
+                <div class="platform-icon">🪟</div>
+                <h2>Windows</h2>
+                <p id="windows-desc">Searching for latest version...</p>
+                <button id="windowsBtn" class="download-link" disabled>Loading...</button>
+            </div>
+            
+            <div class="platform">
+                <div class="platform-icon">🐧</div>
+                <h2>Linux</h2>
+                <p id="linux-desc">Searching for latest version...</p>
+                <button id="linuxBtn" class="download-link" disabled>Loading...</button>
+            </div>
+        </div>
+        
+        <div class="info" id="info"></div>
+    </div>
+
+    <script>
+        const owner = 'AndreevVE';
+        const repo = 'Sorting_Photos_releases';
+        
+        // Функция для принудительной загрузки файла
+        function downloadFile(url, filename) {
+            // Создаем временную ссылку
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.target = '_blank';
+            
+            // Добавляем в DOM, кликаем и удаляем
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Функция для поиска файла в папке
+        async function findFileInFolder(folderPath, extension) {
+            try {
+                // Получаем содержимое папки
+                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folderPath}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const contents = await response.json();
+                
+                // Ищем файл с нужным расширением
+                const file = contents.find(item => 
+                    item.type === 'file' && 
+                    item.name.toLowerCase().endsWith(extension)
+                );
+                
+                if (file) {
+                    // Это прямая ссылка на raw файл
+                    return {
+                        url: file.download_url,
+                        name: file.name
+                    };
+                }
+                
+                return null;
+            } catch (error) {
+                console.error(`Error finding file in ${folderPath}:`, error);
+                return null;
+            }
+        }
+        
+        // Функция для получения последней версии
+        async function getLatestVersion(platform) {
+            try {
+                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${platform}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const contents = await response.json();
+                
+                // Фильтруем только папки и сортируем по имени
+                const versions = contents
+                    .filter(item => item.type === 'dir')
+                    .map(item => item.name)
+                    .sort((a, b) => b.localeCompare(a));
+                
+                return versions.length > 0 ? versions[0] : null;
+            } catch (error) {
+                console.error(`Error getting latest version for ${platform}:`, error);
+                return null;
+            }
+        }
+        
+        async function setupDownloads() {
+            try {
+                // Получаем последние версии
+                const [windowsVersion, linuxVersion] = await Promise.all([
+                    getLatestVersion('Windows'),
+                    getLatestVersion('Linux')
+                ]);
+                
+                let anySuccess = false;
+                
+                // Обработка Windows
+                if (windowsVersion) {
+                    const fileInfo = await findFileInFolder(`Windows/${windowsVersion}`, '.exe');
+                    
+                    if (fileInfo) {
+                        const windowsBtn = document.getElementById('windowsBtn');
+                        windowsBtn.disabled = false;
+                        windowsBtn.textContent = 'Download .exe';
+                        windowsBtn.onclick = () => {
+                            downloadFile(fileInfo.url, fileInfo.name);
+                        };
+                        document.getElementById('windows-desc').innerHTML = `✅ Version ${windowsVersion}<br><span style="font-size:0.85em;">${fileInfo.name}</span>`;
+                        anySuccess = true;
+                    } else {
+                        document.getElementById('windows-desc').innerHTML = `⚠️ Version ${windowsVersion} found<br><span style="font-size:0.85em;">No .exe file found</span>`;
+                        const windowsBtn = document.getElementById('windowsBtn');
+                        windowsBtn.disabled = true;
+                        windowsBtn.textContent = 'Not Available';
+                    }
+                } else {
+                    document.getElementById('windows-desc').textContent = '❌ No Windows versions found';
+                    const windowsBtn = document.getElementById('windowsBtn');
+                    windowsBtn.disabled = true;
+                    windowsBtn.textContent = 'Not Found';
+                }
+                
+                // Обработка Linux
+                if (linuxVersion) {
+                    const fileInfo = await findFileInFolder(`Linux/${linuxVersion}`, '.deb');
+                    
+                    if (fileInfo) {
+                        const linuxBtn = document.getElementById('linuxBtn');
+                        linuxBtn.disabled = false;
+                        linuxBtn.textContent = 'Download .deb';
+                        linuxBtn.onclick = () => {
+                            downloadFile(fileInfo.url, fileInfo.name);
+                        };
+                        document.getElementById('linux-desc').innerHTML = `✅ Version ${linuxVersion}<br><span style="font-size:0.85em;">${fileInfo.name}</span>`;
+                        anySuccess = true;
+                    } else {
+                        document.getElementById('linux-desc').innerHTML = `⚠️ Version ${linuxVersion} found<br><span style="font-size:0.85em;">No .deb file found</span>`;
+                        const linuxBtn = document.getElementById('linuxBtn');
+                        linuxBtn.disabled = true;
+                        linuxBtn.textContent = 'Not Available';
+                    }
+                } else {
+                    document.getElementById('linux-desc').textContent = '❌ No Linux versions found';
+                    const linuxBtn = document.getElementById('linuxBtn');
+                    linuxBtn.disabled = true;
+                    linuxBtn.textContent = 'Not Found';
+                }
+                
+                // Обновляем общую информацию
+                if (anySuccess) {
+                    const latestVersion = [windowsVersion, linuxVersion]
+                        .filter(v => v)
+                        .sort()
+                        .reverse()[0];
+                    document.getElementById('version').innerHTML = `✨ Latest version: ${latestVersion} ✨`;
+                    document.getElementById('info').innerHTML = '💡 Click the button above to start downloading immediately';
+                } else {
+                    document.getElementById('version').innerHTML = '❌ No releases found';
+                    document.getElementById('info').innerHTML = 'Please check back later for updates.';
+                    document.getElementById('info').classList.add('error');
+                }
+                
+            } catch (error) {
+                console.error('Setup error:', error);
+                document.getElementById('version').innerHTML = '❌ Failed to load releases';
+                document.getElementById('info').innerHTML = 'Please check your internet connection or try again later.';
+                document.getElementById('info').classList.add('error');
+                
+                // Отключаем кнопки при ошибке
+                document.getElementById('windowsBtn').disabled = true;
+                document.getElementById('windowsBtn').textContent = 'Error';
+                document.getElementById('linuxBtn').disabled = true;
+                document.getElementById('linuxBtn').textContent = 'Error';
+            }
+        }
+        
+        // Запускаем загрузку данных
+        setupDownloads();
+    </script>
+</body>
+</html>
